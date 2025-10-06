@@ -12,10 +12,8 @@ int main() {
     // Disable output buffering
     setbuf(stdout, NULL);
 
-    // You can use print statements as follows for debugging, they'll be visible when running tests.
     std::cout << "Logs from your program will appear here!" << std::endl;
 
-      // Uncomment this block to pass the first stage
    int udpSocket;
    struct sockaddr_in clientAddress;
 
@@ -25,8 +23,6 @@ int main() {
        return 1;
    }
 
-   // Since the tester restarts your program quite often, setting REUSE_PORT
-   // ensures that we don't run into 'Address already in use' errors
    int reuse = 1;
    if (setsockopt(udpSocket, SOL_SOCKET, SO_REUSEPORT, &reuse, sizeof(reuse)) < 0) {
        std::cerr << "SO_REUSEPORT failed: " << strerror(errno) << std::endl;
@@ -48,7 +44,6 @@ int main() {
    socklen_t clientAddrLen = sizeof(clientAddress);
 
    while (true) {
-       // Receive data
        bytesRead = recvfrom(udpSocket, buffer, sizeof(buffer), 0, reinterpret_cast<struct sockaddr*>(&clientAddress), &clientAddrLen);
        if (bytesRead == -1) {
            perror("Error receiving data");
@@ -58,10 +53,8 @@ int main() {
        buffer[bytesRead] = '\0';
        std::cout << "Received " << bytesRead << " bytes: " << buffer << std::endl;
 
-       // Create an empty response
        char response[1] = { '\0' };
 
-       // Send response
        if (sendto(udpSocket, response, sizeof(response), 0, reinterpret_cast<struct sockaddr*>(&clientAddress), sizeof(clientAddress)) == -1) {
            perror("Failed to send response");
        }
