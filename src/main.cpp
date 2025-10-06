@@ -53,8 +53,11 @@ int main() {
        buffer[bytesRead] = '\0';
        std::cout << "Received " << bytesRead << " bytes: " << buffer << std::endl;
 
-       char response[1] = { '\0' };
+       unsigned char response[12] = {0x00, 0x00, 1<<7,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+       uint16_t packet_id = htons(1234);
+       std::memcpy(response, &packet_id,sizeof(packet_id));
 
+       
        if (sendto(udpSocket, response, sizeof(response), 0, reinterpret_cast<struct sockaddr*>(&clientAddress), sizeof(clientAddress)) == -1) {
            perror("Failed to send response");
        }
