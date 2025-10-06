@@ -1,4 +1,4 @@
-#DNS Server Using the C++
+# DNS Server Using the C++
 
 This C++ program implements a basic DNS (Domain Name System) forwarder. It listens for DNS queries on UDP port 2053, forwards them to a specified upstream resolver, and then sends the resolver's response back to the original client.
 
