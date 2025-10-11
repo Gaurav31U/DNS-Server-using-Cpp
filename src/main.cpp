@@ -1,3 +1,5 @@
+// Basic DNS server that forwards queries to an upstream resolver
+// Listens on UDP port 2053
 #include <iostream>
 #include <cstring>
 #include <sys/socket.h>
@@ -13,12 +15,12 @@ std::vector<unsigned char> parse_qname(const unsigned char *buffer, int &offset)
 
     while (true){
         unsigned char len = buffer[pos];
-        if ((len & 0xC0) == 0xC0){
+        if ((len & 0xC0) == 0xC0){   // 0xC0 -> 1100 0000
             // pointer
             uint16_t pointer;
             std::memcpy(&pointer, buffer + pos, 2);
             pointer = ntohs(pointer);
-            pointer &= 0x3FFF;
+            pointer &= 0x3FFF;  // 0x3FFF -> 0011 1111 1111 1111
 
             if (jumped == -1)
                 offset = pos + 2;
@@ -55,23 +57,19 @@ int main(int argc, char *argv[]){
     std::string resolver_ip = resolver_addr.substr(0, pos);
     uint16_t resolver_port = std::stoi(resolver_addr.substr(pos + 1));
 
-    // Flush after every std::cout / std::cerr
     std::cout << std::unitbuf;
     std::cerr << std::unitbuf;
 
-    // Disable output buffering
     setbuf(stdout, NULL);
 
-    // You can use print statements as follows for debugging, they'll be visible when running tests.
     std::cout << "Logs from your program will appear here!" << std::endl;
 
-    // Uncomment this block to pass the first stage
-    int udpSocket;
+    int udpSocket;    // This is the main server socket. It will listen for queries from clients.
     struct sockaddr_in clientAddress;
 
-    udpSocket = socket(AF_INET, SOCK_DGRAM, 0);
-    if (udpSocket == -1)
-    {
+    udpSocket = socket(AF_INET, SOCK_DGRAM, 0);  
+
+    if (udpSocket == -1){
         std::cerr << "Socket creation failed: " << strerror(errno) << "..." << std::endl;
         return 1;
     }
@@ -79,24 +77,23 @@ int main(int argc, char *argv[]){
     // Since the tester restarts your program quite often, setting REUSE_PORT
     // ensures that we don't run into 'Address already in use' errors
     int reuse = 1;
-    if (setsockopt(udpSocket, SOL_SOCKET, SO_REUSEPORT, &reuse, sizeof(reuse)) < 0)
-    {
+    if (setsockopt(udpSocket, SOL_SOCKET, SO_REUSEPORT, &reuse, sizeof(reuse)) < 0){  
         std::cerr << "SO_REUSEPORT failed: " << strerror(errno) << std::endl;
         return 1;
     }
 
-    sockaddr_in serv_addr = {
+    sockaddr_in serv_addr = {         
         .sin_family = AF_INET,
         .sin_port = htons(2053),
         .sin_addr = {htonl(INADDR_ANY)},
     };
 
-    if (bind(udpSocket, reinterpret_cast<struct sockaddr *>(&serv_addr), sizeof(serv_addr)) != 0){
+    if (bind(udpSocket, reinterpret_cast<struct sockaddr *>(&serv_addr), sizeof(serv_addr)) != 0){  // The bind function associates udpSocket with a specific IP address and port.
         std::cerr << "Bind failed: " << strerror(errno) << std::endl;
         return 1;
     }
 
-    int forwardSocket = socket(AF_INET, SOCK_DGRAM, 0);
+    int forwardSocket = socket(AF_INET, SOCK_DGRAM, 0); // This socket is used to send queries to the upstream resolver and receive answers from it.
     if (forwardSocket == -1){
         perror("Forward socket creation failed");
         return 1;
@@ -113,9 +110,10 @@ int main(int argc, char *argv[]){
 
     while (true){
         // Receive data
+        // The program blocks here, waiting for a DNS query to arrive on udpSocket
+        // When a packet arrives, its content is placed in buffer, and information about the client (their IP and port) is stored in clientAddress.
         bytesRead = recvfrom(udpSocket, buffer, sizeof(buffer), 0, reinterpret_cast<struct sockaddr *>(&clientAddress), &clientAddrLen);
-        if (bytesRead == -1)
-        {
+        if (bytesRead == -1){
             perror("Error receiving data");
             break;
         }
