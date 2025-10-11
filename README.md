@@ -63,3 +63,11 @@ This command sends a DNS query for `google.com` to your server running on `local
 ### Bit Manipulation
 
 ![DNS_Working](./dns_forwarder_bit_flow.svg)
+
+### DNS Header Structure
+
+![DNS_header](./dns_header_structure.svg)
+
+### DNS Message Structure
+
+![DNS_header](./dns_message_structure.svg)
