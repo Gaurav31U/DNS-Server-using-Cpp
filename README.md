@@ -31,6 +31,8 @@ This command sends a DNS query for `google.com` to your server running on `local
 
 ### Code Breakdown
 
+![DNS_Working](./dns_forwarder_flow.svg)
+
 *   **`main` function**:
     *   **Argument Parsing**: It begins by checking for the correct command-line arguments. The server expects a `--resolver` flag followed by the resolver's IP address and port.
     *   **Socket Creation**: Two UDP sockets are created:
@@ -57,3 +59,7 @@ This command sends a DNS query for `google.com` to your server running on `local
     *   This helper function is responsible for parsing the domain name from the question section of a DNS query.
     *   DNS queries use a specific format for domain names, where labels (like "google" and "com") are prefixed by their length. For example, "google.com" is encoded as `6google3com0`.
     *   This function also handles DNS message compression, where a domain name can use a pointer to a previous occurrence of the same name to save space.
+ 
+### Bit Manipulation
+
+![DNS_Working](./dns_forwarder_bit_flow.svg)
